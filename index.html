@@ -1,0 +1,949 @@
+<!doctype html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>ບັນຊີລາຍຮັບ-ລາຍຈ່າຍ</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0E1A2C">
+<meta name="background-color" content="#16243B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ບັນຊີລາຍຮັບ">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Lao:wght@600;700&family=Noto+Sans+Lao:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#16243B;
+    --canvas-deep:#0E1A2C;
+    --paper:#F7F1E1;
+    --paper-raised:#FFFBF1;
+    --ink:#2A231C;
+    --ink-soft:#6E6048;
+    --on-canvas:#F2EAD6;
+    --on-canvas-soft:#9FB0C4;
+    --gold:#C9A227;
+    --gold-soft:rgba(201,162,39,0.35);
+    --terracotta:#C1592F;
+    --terracotta-tint:rgba(193,89,47,0.14);
+    --jade:#4B8268;
+    --jade-tint:rgba(75,130,104,0.14);
+    --line:#E3D9BC;
+    --line-on-canvas:rgba(242,234,214,0.16);
+    --shadow:0 10px 28px -10px rgba(8,14,24,0.45);
+    --radius-page:4px 16px 16px 4px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--canvas);
+    color:var(--ink);
+    font-family:'Noto Sans Lao','Noto Sans',sans-serif;
+    font-variant-numeric:tabular-nums;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  h1,h2,h3,.serif{font-family:'Noto Serif Lao','Noto Sans Lao',serif;}
+  button{font-family:inherit;}
+  input,select{font-family:inherit;}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+
+  #app{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    position:relative;
+    padding-bottom:84px;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(201,162,39,0.06), transparent 55%),
+      var(--canvas);
+  }
+
+  /* ---------- Header ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:var(--canvas-deep);
+    padding:18px 18px 14px;
+    border-bottom:1px solid var(--line-on-canvas);
+  }
+  .topbar-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .brand{display:flex;flex-direction:column;gap:1px;}
+  .brand .mark{
+    display:flex;align-items:center;gap:8px;
+    color:var(--on-canvas);
+    font-size:19px;font-weight:700;letter-spacing:0.2px;
+  }
+  .brand .mark .seal-dot{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 0 3px rgba(201,162,39,0.22);
+  }
+  .brand .sub{color:var(--on-canvas-soft);font-size:12.5px;}
+
+  .month-switch{
+    display:flex;align-items:center;gap:6px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--line-on-canvas);
+    border-radius:999px;padding:4px 4px 4px 10px;
+  }
+  .month-switch .label{
+    color:var(--on-canvas);font-size:13px;font-weight:600;min-width:88px;text-align:center;
+  }
+  .month-switch button{
+    width:26px;height:26px;border-radius:50%;border:none;
+    background:transparent;color:var(--on-canvas-soft);
+    font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  }
+  .month-switch button:hover{background:rgba(255,255,255,0.08);color:var(--on-canvas);}
+
+  .page-title{
+    color:var(--on-canvas);font-size:19px;font-weight:700;margin:2px 0 0;
+  }
+
+  /* ---------- Generic page card (ledger page motif) ---------- */
+  .page-card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-left:3px dashed var(--gold-soft);
+    border-radius:var(--radius-page);
+    box-shadow:var(--shadow);
+    padding:18px;
+  }
+  main{padding:16px;display:flex;flex-direction:column;gap:14px;}
+  .section-eyebrow{
+    color:var(--on-canvas-soft);
+    font-size:11.5px;letter-spacing:0.08em;
+    text-transform:uppercase;margin:2px 2px 0;
+  }
+
+  /* ---------- Hero / stamp ---------- */
+  .hero{display:flex;align-items:center;gap:16px;}
+  .stamp{
+    flex:0 0 auto;width:118px;height:118px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    position:relative;
+    background:var(--paper-raised);
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,0.03);
+    transform:rotate(-4deg);
+  }
+  .stamp::before{
+    content:'';position:absolute;inset:6px;border-radius:50%;
+    border:1.5px dashed var(--stamp-ring,var(--jade));opacity:0.8;
+  }
+  .stamp::after{
+    content:'';position:absolute;inset:0;border-radius:50%;
+    border:2px solid var(--stamp-ring,var(--jade));opacity:0.55;
+  }
+  .stamp .inner{position:relative;text-align:center;transform:rotate(4deg);padding:0 8px;}
+  .stamp .inner .lbl{font-size:10.5px;color:var(--ink-soft);letter-spacing:0.03em;}
+  .stamp .inner .amt{
+    font-family:'Noto Serif Lao',serif;font-weight:700;
+    font-size:16px;color:var(--ink);line-height:1.15;margin-top:2px;
+  }
+  .hero-stats{flex:1;display:flex;flex-direction:column;gap:0;}
+  .hstat{display:flex;align-items:center;gap:10px;padding:8px 0;}
+  .hstat + .hstat{border-top:1px dashed var(--line);}
+  .hstat .swatch{width:9px;height:9px;border-radius:2px;flex:0 0 auto;}
+  .hstat .meta{flex:1;}
+  .hstat .meta .t{font-size:12px;color:var(--ink-soft);}
+  .hstat .meta .v{font-family:'Noto Serif Lao',serif;font-weight:700;font-size:16px;}
+
+  /* ---------- Donut chart ---------- */
+  .chart-card .head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;}
+  .chart-card .head h2{margin:0;font-size:15.5px;font-weight:700;}
+  .chart-card .head .total{font-size:13px;color:var(--ink-soft);}
+  .donut-wrap{display:flex;align-items:center;gap:18px;}
+  .donut{
+    flex:0 0 auto;width:104px;height:104px;border-radius:50%;position:relative;
+  }
+  .donut .hole{
+    position:absolute;inset:18px;border-radius:50%;background:var(--paper);
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+  }
+  .donut .hole .h-lbl{font-size:9.5px;color:var(--ink-soft);}
+  .donut .hole .h-val{font-family:'Noto Serif Lao',serif;font-weight:700;font-size:12.5px;}
+  .legend{flex:1;display:flex;flex-direction:column;gap:7px;min-width:0;}
+  .legend-row{display:flex;align-items:center;gap:8px;font-size:12.5px;}
+  .legend-row .sw{width:8px;height:8px;border-radius:2px;flex:0 0 auto;}
+  .legend-row .nm{flex:1;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .legend-row .pc{color:var(--ink-soft);flex:0 0 auto;}
+
+  /* ---------- Lists ---------- */
+  .list-card .head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;}
+  .list-card .head h2{margin:0;font-size:15.5px;font-weight:700;}
+  .list-card .head a{font-size:12.5px;color:var(--ink-soft);text-decoration:none;border-bottom:1px dotted var(--ink-soft);cursor:pointer;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit;padding:0;}
+  .date-group{margin-top:10px;}
+  .date-group:first-child{margin-top:0;}
+  .date-label{font-size:11.5px;color:var(--ink-soft);letter-spacing:0.03em;margin:0 0 6px;}
+  .txn-row{
+    display:flex;align-items:center;gap:10px;padding:9px 4px;
+    border-radius:8px;cursor:pointer;background:none;border:none;width:100%;text-align:left;
+  }
+  .txn-row:hover{background:rgba(42,35,28,0.04);}
+  .marker{
+    width:34px;height:34px;border-radius:50%;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:600;
+  }
+  .marker.exp{background:var(--terracotta-tint);color:var(--terracotta);}
+  .marker.inc{background:var(--jade-tint);color:var(--jade);}
+  .txn-mid{flex:1;min-width:0;}
+  .txn-mid .cat{font-size:13.5px;font-weight:600;color:var(--ink);}
+  .txn-mid .note{font-size:11.5px;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .txn-amt{font-family:'Noto Serif Lao',serif;font-weight:700;font-size:14px;flex:0 0 auto;}
+  .txn-amt.exp{color:var(--terracotta);}
+  .txn-amt.inc{color:var(--jade);}
+
+  .empty{
+    text-align:center;padding:26px 10px;color:var(--ink-soft);font-size:13px;
+  }
+  .empty .big{font-size:26px;display:block;margin-bottom:6px;}
+
+  /* ---------- Filter chips ---------- */
+  .chiprow{display:flex;gap:8px;}
+  .chip{
+    padding:7px 14px;border-radius:999px;border:1px solid var(--line);
+    background:var(--paper-raised);font-size:12.5px;color:var(--ink-soft);cursor:pointer;
+  }
+  .chip.active{background:var(--canvas);color:var(--on-canvas);border-color:var(--canvas);}
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    border:none;border-radius:10px;padding:12px 16px;font-size:14.5px;font-weight:600;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn:disabled{opacity:0.6;cursor:not-allowed;transform:scale(1);}
+  .btn-primary{background:var(--canvas);color:var(--on-canvas);}
+  .btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line);}
+  .btn-danger{background:transparent;color:var(--terracotta);border:1px solid var(--terracotta);}
+  .btn-block{width:100%;}
+
+  /* ---------- Settings ---------- */
+  .info-row{display:flex;justify-content:space-between;padding:11px 0;border-top:1px dashed var(--line);font-size:13.5px;}
+  .info-row:first-child{border-top:none;padding-top:0;}
+  .info-row .k{color:var(--ink-soft);}
+  .info-row .v{font-weight:600;}
+
+  /* ---------- FAB ---------- */
+  .fab{
+    position:fixed;right:50%;transform:translateX(170px);bottom:84px;z-index:25;
+    width:54px;height:54px;border-radius:50%;
+    background:var(--gold);color:var(--canvas-deep);border:none;
+    font-size:26px;line-height:1;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 10px 22px -6px rgba(201,162,39,0.55);cursor:pointer;
+  }
+  .fab:active{transform:translateX(170px) scale(0.94);}
+  @media (max-width:480px){
+    .fab{right:24px;transform:none;}
+    .fab:active{transform:scale(0.94);}
+  }
+
+  /* ---------- Bottom nav ---------- */
+  .bottomnav{
+    position:fixed;left:0;right:0;bottom:0;z-index:20;
+    background:var(--canvas-deep);border-top:1px solid var(--line-on-canvas);
+    display:flex;justify-content:center;
+  }
+  .bottomnav-inner{max-width:480px;width:100%;display:flex;}
+  .navitem{
+    flex:1;background:none;border:none;padding:10px 4px 12px;
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    color:var(--on-canvas-soft);font-size:11px;cursor:pointer;
+  }
+  .navitem svg{width:20px;height:20px;}
+  .navitem.active{color:var(--gold);}
+  .navitem.active svg{stroke:var(--gold);}
+
+  /* ---------- Modal / sheet ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(10,16,26,0.55);z-index:40;
+    display:flex;align-items:flex-end;justify-content:center;
+    opacity:0;pointer-events:none;transition:opacity .2s ease;
+  }
+  .overlay.open{opacity:1;pointer-events:auto;}
+  .sheet{
+    width:100%;max-width:480px;background:var(--paper);
+    border-radius:18px 18px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+    max-height:88vh;overflow-y:auto;
+    transform:translateY(100%);transition:transform .25s ease;
+  }
+  .overlay.open .sheet{transform:translateY(0);}
+  .sheet-handle{width:38px;height:4px;border-radius:3px;background:var(--line);margin:0 auto 14px;}
+  .sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .sheet-head h3{margin:0;font-size:16.5px;font-weight:700;}
+  .sheet-head .x{background:none;border:none;font-size:20px;color:var(--ink-soft);cursor:pointer;padding:4px;}
+
+  .seg{display:flex;background:rgba(42,35,28,0.06);border-radius:10px;padding:3px;margin-bottom:16px;}
+  .seg button{
+    flex:1;border:none;background:none;padding:9px 0;border-radius:8px;
+    font-size:13.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;
+  }
+  .seg button.active.exp{background:var(--paper-raised);color:var(--terracotta);box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+  .seg button.active.inc{background:var(--paper-raised);color:var(--jade);box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:6px;}
+  .amount-input{
+    display:flex;align-items:center;gap:8px;border:1px solid var(--line);
+    background:var(--paper-raised);border-radius:10px;padding:10px 12px;
+  }
+  .amount-input span{font-family:'Noto Serif Lao',serif;font-weight:700;color:var(--ink-soft);}
+  .amount-input input{
+    border:none;background:none;font-size:21px;font-weight:700;font-family:'Noto Serif Lao',serif;
+    width:100%;color:var(--ink);
+  }
+  .amount-input input:focus{outline:none;}
+  .cat-grid{display:flex;flex-wrap:wrap;gap:8px;}
+  .cat-chip{
+    display:flex;align-items:center;gap:6px;padding:7px 12px 7px 7px;
+    border-radius:999px;border:1px solid var(--line);background:var(--paper-raised);
+    font-size:12.5px;color:var(--ink);cursor:pointer;
+  }
+  .cat-chip .m{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;}
+  .cat-chip.sel{border-color:currentColor;background:var(--terracotta-tint);}
+  .cat-chip.sel.inc{background:var(--jade-tint);}
+  input[type=text].plain,input[type=date].plain{
+    width:100%;border:1px solid var(--line);background:var(--paper-raised);
+    border-radius:10px;padding:10px 12px;font-size:14px;color:var(--ink);
+  }
+  .sheet-actions{display:flex;gap:10px;margin-top:6px;}
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(10px);
+    background:var(--canvas-deep);color:var(--on-canvas);padding:10px 18px;border-radius:999px;
+    font-size:13px;z-index:60;opacity:0;transition:opacity .25s ease, transform .25s ease;
+    border:1px solid var(--line-on-canvas);box-shadow:var(--shadow);
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* ---------- Loading ---------- */
+  .loading-screen{
+    position:fixed;inset:0;background:var(--canvas);display:flex;align-items:center;justify-content:center;
+    flex-direction:column;gap:14px;z-index:99;color:var(--on-canvas-soft);font-size:13px;
+  }
+  .loading-screen .seal-dot{width:14px;height:14px;border-radius:50%;background:var(--gold);animation:pulse 1.1s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:0.4;transform:scale(0.85);}50%{opacity:1;transform:scale(1.1);}}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important;transition-duration:0.001ms !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loadingScreen">
+  <div class="seal-dot"></div>
+  <div>ກຳລັງໂຫຼດຂໍ້ມູນ...</div>
+</div>
+
+<div id="app" style="display:none;">
+  <div class="topbar">
+    <div class="topbar-row">
+      <div class="brand">
+        <div class="mark"><span class="seal-dot"></span><span class="serif">ບັນຊີລາຍຮັບ-ລາຍຈ່າຍ</span></div>
+        <div class="sub">ສ່ວນຕົວ ແລະ ຄອບຄົວ</div>
+      </div>
+      <div class="month-switch" id="monthSwitch">
+        <button id="prevMonth" aria-label="ເດືອນກ່ອນ">‹</button>
+        <span class="label" id="monthLabel">—</span>
+        <button id="nextMonth" aria-label="ເດືອນຕໍ່ໄປ">›</button>
+      </div>
+    </div>
+  </div>
+
+  <main id="main"></main>
+
+  <button class="fab" id="fabAdd" aria-label="ເພີ່ມລາຍການ">+</button>
+
+  <div class="bottomnav">
+    <div class="bottomnav-inner">
+      <button class="navitem active" data-tab="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 11l9-7 9 7"/><path d="M5 10v9h14v-9"/></svg>
+        ໜ້າຫຼັກ
+      </button>
+      <button class="navitem" data-tab="transactions">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+        ລາຍການ
+      </button>
+      <button class="navitem" data-tab="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
+        ການຕັ້ງຄ່າ
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ Data ============ */
+const EXPENSE_CATS = [
+  {id:'food', label:'ອາຫານ ແລະ ເຄື່ອງດື່ມ', short:'ອາ', chart:'#C1592F'},
+  {id:'transport', label:'ການເດີນທາງ', short:'ທາງ', chart:'#B8902C'},
+  {id:'housing', label:'ທີ່ພັກອາໄສ', short:'ພັກ', chart:'#8C5A3C'},
+  {id:'health', label:'ສາທາລະນະສຸຂ', short:'ສຸຂ', chart:'#A8763F'},
+  {id:'education', label:'ການສຶກສາ', short:'ສຶກ', chart:'#946B2D'},
+  {id:'entertainment', label:'ບັນເທີງ', short:'ບັນ', chart:'#BD7A4A'},
+  {id:'debt', label:'ຄ່າຜ່ອນ ແລະ ໜີ້ສິນ', short:'ໜີ້', chart:'#7A4A33'},
+  {id:'other_exp', label:'ອື່ນໆ', short:'ອື່ນ', chart:'#9C8868'},
+];
+const INCOME_CATS = [
+  {id:'salary', label:'ເງິນເດືອນ', short:'ເດືອນ'},
+  {id:'interest_investment', label:'ດອກເບ້ຍ ແລະ ການລົງທຶນ', short:'ດອກ'},
+  {id:'rent', label:'ຄ່າເຊົ່າອາໄສ', short:'ເຊົ່າ'},
+  {id:'bonus_gift', label:'ເງິນໂບນັດ ແລະ ຂອງຂວັນ', short:'ໂບນັດ'},
+  {id:'other_inc', label:'ອື່ນໆ', short:'ອື່ນ'},
+];
+const MONTHS = ['ມັງກອນ','ກຸມພາ','ມີນາ','ເມສາ','ພຶດສະພາ','ມິຖຸນາ','ກໍລະກົດ','ສິງຫາ','ກັນຍາ','ຕຸລາ','ພະຈິກ','ທັນວາ'];
+
+function catsFor(type){ return type === 'income' ? INCOME_CATS : EXPENSE_CATS; }
+function findCat(type, id){ return catsFor(type).find(c => c.id === id); }
+
+/* ============ State ============ */
+let state = {
+  tab: 'dashboard',
+  transactions: [],
+  viewMonth: (() => { const d = new Date(); return {y: d.getFullYear(), m: d.getMonth()}; })(),
+  editingId: null,
+  draftType: 'expense',
+  draftCat: null,
+};
+
+/* ============ Storage helpers (browser/app localStorage) ============ */
+const STORAGE_PREFIX = 'lao_finance_app:';
+const STORAGE_KEY_TXNS = STORAGE_PREFIX + 'transactions';
+
+function lsGet(key){
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+function lsSet(key, value){
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch (e) { return false; }
+}
+function lsRemove(key){
+  try { window.localStorage.removeItem(key); } catch (e) {}
+}
+
+async function loadAll(){
+  const txns = lsGet(STORAGE_KEY_TXNS);
+  state.transactions = Array.isArray(txns) ? txns : [];
+}
+async function saveTransactions(){
+  const ok = lsSet(STORAGE_KEY_TXNS, state.transactions);
+  if (!ok) showToast('ບໍ່ສາມາດບັນທຶກໄດ້ ກະລຸນາລອງໃໝ່');
+}
+
+/* ============ Utils ============ */
+function fmt(n){
+  n = Math.round(Number(n) || 0);
+  const neg = n < 0; n = Math.abs(n);
+  let s = String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return (neg ? '-' : '') + s;
+}
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function dateLabel(iso){
+  const [y,m,d] = iso.split('-').map(Number);
+  return d + ' ' + MONTHS[m-1] + ' ' + y;
+}
+function monthKey(y,m){ return y + '-' + String(m+1).padStart(2,'0'); }
+function inViewMonth(t){
+  const [y,m] = t.date.split('-').map(Number);
+  return y === state.viewMonth.y && (m-1) === state.viewMonth.m;
+}
+function showToast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+/* ============ Derived data ============ */
+function monthTxns(){ return state.transactions.filter(inViewMonth); }
+function totals(list){
+  let inc = 0, exp = 0;
+  list.forEach(t => { if (t.type === 'income') inc += Number(t.amount); else exp += Number(t.amount); });
+  return {inc, exp, balance: inc - exp};
+}
+function expenseByCategory(list){
+  const map = {};
+  list.filter(t => t.type === 'expense').forEach(t => {
+    map[t.categoryId] = (map[t.categoryId] || 0) + Number(t.amount);
+  });
+  return map;
+}
+
+/* ============ Rendering ============ */
+function render(){
+  document.querySelectorAll('.navitem').forEach(b => b.classList.toggle('active', b.dataset.tab === state.tab));
+  const monthSwitch = document.getElementById('monthSwitch');
+  document.getElementById('monthLabel').textContent = MONTHS[state.viewMonth.m] + ' ' + state.viewMonth.y;
+  monthSwitch.style.display = (state.tab === 'dashboard' || state.tab === 'transactions') ? 'flex' : 'none';
+
+  const main = document.getElementById('main');
+  if (state.tab === 'dashboard') main.innerHTML = renderDashboard();
+  else if (state.tab === 'transactions') main.innerHTML = renderTransactions();
+  else main.innerHTML = renderSettings();
+
+  document.getElementById('fabAdd').style.display = (state.tab === 'settings') ? 'none' : 'flex';
+  attachDynamicHandlers();
+}
+
+function renderDashboard(){
+  const list = monthTxns();
+  const {inc, exp, balance} = totals(list);
+  const ring = balance >= 0 ? 'var(--jade)' : 'var(--terracotta)';
+  const byCat = expenseByCategory(list);
+  const recent = [...state.transactions].sort((a,b) => (b.date+b.createdAt).localeCompare(a.date+a.createdAt)).slice(0,5);
+
+  return `
+    <section class="page-card hero">
+      <div class="stamp" style="--stamp-ring:${ring}">
+        <div class="inner">
+          <div class="lbl">ຍອດເຫຼືອເດືອນນີ້</div>
+          <div class="amt">₭ ${fmt(balance)}</div>
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="hstat">
+          <div class="swatch" style="background:var(--jade)"></div>
+          <div class="meta"><div class="t">ລາຍຮັບ</div><div class="v" style="color:var(--jade)">₭ ${fmt(inc)}</div></div>
+        </div>
+        <div class="hstat">
+          <div class="swatch" style="background:var(--terracotta)"></div>
+          <div class="meta"><div class="t">ລາຍຈ່າຍ</div><div class="v" style="color:var(--terracotta)">₭ ${fmt(exp)}</div></div>
+        </div>
+      </div>
+    </section>
+
+    ${renderDonutCard(byCat, exp)}
+
+    <section class="page-card list-card">
+      <div class="head"><h2>ລາຍການຫຼ້າສຸດ</h2><a id="seeAllLink">ເບິ່ງທັງໝົດ ›</a></div>
+      ${recent.length ? recent.map(txnRow).join('') : emptyState('ຍັງບໍ່ມີລາຍການ', 'ກົດປຸ່ມ + ເພື່ອເພີ່ມລາຍຮັບ ຫຼື ລາຍຈ່າຍ')}
+    </section>
+  `;
+}
+
+function renderDonutCard(byCat, exp){
+  const cats = EXPENSE_CATS.filter(c => byCat[c.id] > 0).sort((a,b) => byCat[b.id]-byCat[a.id]);
+  if (!cats.length){
+    return `<section class="page-card chart-card">
+      <div class="head"><h2>ລາຍຈ່າຍຕາມໝວດໝູ່</h2></div>
+      ${emptyState('ຍັງບໍ່ມີລາຍຈ່າຍ', 'ໝວດໝູ່ລາຍຈ່າຍຈະສະແດງຢູ່ນີ້')}
+    </section>`;
+  }
+  let cum = 0;
+  const stops = cats.map(c => {
+    const pct = (byCat[c.id] / exp) * 100;
+    const from = cum; cum += pct;
+    return `${c.chart} ${from}% ${cum}%`;
+  }).join(', ');
+  const legend = cats.map(c => {
+    const pct = Math.round((byCat[c.id] / exp) * 100);
+    return `<div class="legend-row"><span class="sw" style="background:${c.chart}"></span><span class="nm">${c.label}</span><span class="pc">${pct}%</span></div>`;
+  }).join('');
+  return `<section class="page-card chart-card">
+    <div class="head"><h2>ລາຍຈ່າຍຕາມໝວດໝູ່</h2><span class="total">₭ ${fmt(exp)}</span></div>
+    <div class="donut-wrap">
+      <div class="donut" style="background:conic-gradient(${stops})">
+        <div class="hole"><div class="h-lbl">ລາຍຈ່າຍ</div><div class="h-val">₭ ${fmt(exp)}</div></div>
+      </div>
+      <div class="legend">${legend}</div>
+    </div>
+  </section>`;
+}
+
+function renderTransactions(){
+  const list = state.transactions.filter(inViewMonth)
+    .filter(t => state.txnFilter === 'income' ? t.type === 'income' : state.txnFilter === 'expense' ? t.type === 'expense' : true)
+    .sort((a,b) => (b.date+b.createdAt).localeCompare(a.date+a.createdAt));
+
+  const groups = {};
+  list.forEach(t => { (groups[t.date] = groups[t.date] || []).push(t); });
+  const dates = Object.keys(groups).sort((a,b) => b.localeCompare(a));
+
+  return `
+    <section class="page-card" style="padding:14px 16px;">
+      <div class="chiprow">
+        <button class="chip ${(!state.txnFilter || state.txnFilter==='all')?'active':''}" data-filter="all">ທັງໝົດ</button>
+        <button class="chip ${state.txnFilter==='income'?'active':''}" data-filter="income">ລາຍຮັບ</button>
+        <button class="chip ${state.txnFilter==='expense'?'active':''}" data-filter="expense">ລາຍຈ່າຍ</button>
+      </div>
+    </section>
+    <section class="page-card list-card">
+      ${dates.length ? dates.map(d => `
+        <div class="date-group">
+          <div class="date-label">${dateLabel(d)}</div>
+          ${groups[d].map(txnRow).join('')}
+        </div>
+      `).join('') : emptyState('ຍັງບໍ່ມີລາຍການໃນເດືອນນີ້', 'ກົດປຸ່ມ + ເພື່ອເພີ່ມລາຍການ')}
+    </section>
+  `;
+}
+
+function txnRow(t){
+  const cat = findCat(t.type, t.categoryId) || {label:'ອື່ນໆ', short:'?'};
+  const sign = t.type === 'expense' ? '-' : '+';
+  return `<button class="txn-row" data-edit="${t.id}">
+    <div class="marker ${t.type==='expense'?'exp':'inc'}">${cat.short}</div>
+    <div class="txn-mid">
+      <div class="cat">${cat.label}</div>
+      ${t.note ? `<div class="note">${escapeHtml(t.note)}</div>` : ''}
+    </div>
+    <div class="txn-amt ${t.type==='expense'?'exp':'inc'}">${sign}₭ ${fmt(t.amount)}</div>
+  </button>`;
+}
+
+function renderSettings(){
+  return `
+    <section class="page-card">
+      <div class="info-row"><div class="k">ສະກຸນເງິນ</div><div class="v">ກີບລາວ (₭)</div></div>
+      <div class="info-row"><div class="k">ຈຳນວນລາຍການທັງໝົດ</div><div class="v">${state.transactions.length}</div></div>
+      <div class="info-row"><div class="k">ການເກັບຮັກສາຂໍ້ມູນ</div><div class="v">ໃນເຄື່ອງນີ້ເທົ່ານັ້ນ</div></div>
+    </section>
+    <section class="page-card">
+      <div class="section-eyebrow">ສົ່ງອອກຂໍ້ມູນ</div>
+      <p style="margin:8px 0 14px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;">
+        ສົ່ງອອກລາຍຮັບ-ລາຍຈ່າຍປະຈຳວັນເປັນ Excel ຫຼື PDF.
+      </p>
+      <div style="display:flex;gap:10px;flex-direction:column;">
+        <button class="btn btn-primary btn-block" id="exportExcelBtn">📊 ສົ່ງອອກເປັນ Excel</button>
+        <button class="btn btn-primary btn-block" id="exportPdfBtn">📄 ສົ່ງອອກເປັນ PDF</button>
+      </div>
+    </section>
+    <section class="page-card">
+      <div class="section-eyebrow">ສົ່ງອອກໄປ Google Drive</div>
+      <p style="margin:8px 0 14px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;">
+        ອັບໂຫລດໄປທີ່ Google Drive:<br><strong style="color:var(--ink);">1.</strong> ສົ່ງອອກເປັນ Excel<br><strong style="color:var(--ink);">2.</strong> ເຂົ້າໄປ Google Drive ຂອງທ່ານ<br><strong style="color:var(--ink);">3.</strong> ກົດ <em>ຂໍ້ມູលໃໝ່</em> → <em>ອັບໂຫລດໄຟລ໌</em>
+      </p>
+    </section>
+    <section class="page-card">
+      <p style="margin:0 0 12px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;">
+        ການລົບຂໍ້ມູນຈະລົບລາຍຮັບ ແລະ ລາຍຈ່າຍທັງໝົດທີ່ບັນທຶກໄວ້ ແລະ ບໍ່ສາມາດກູ້ຄືນໄດ້.
+      </p>
+      <button class="btn btn-danger btn-block" id="resetBtn">ລົບຂໍ້ມູນທັງໝົດ</button>
+    </section>
+  `;
+}
+
+function emptyState(title, sub){
+  return `<div class="empty"><span class="big">𝍕</span>${title}<br><span style="font-size:11.5px;">${sub}</span></div>`;
+}
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ============ Sheet (Add / Edit) ============ */
+function openSheet(editId){
+  state.editingId = editId || null;
+  const editing = editId ? state.transactions.find(t => t.id === editId) : null;
+  state.draftType = editing ? editing.type : 'expense';
+  state.draftCat = editing ? editing.categoryId : null;
+
+  document.getElementById('sheet').innerHTML = sheetTemplate(editing);
+  document.getElementById('overlay').classList.add('open');
+  attachSheetHandlers(editing);
+  const amtInput = document.getElementById('amountInput');
+  if (amtInput) setTimeout(() => amtInput.focus(), 200);
+}
+function closeSheet(){
+  document.getElementById('overlay').classList.remove('open');
+  state.editingId = null;
+}
+function sheetTemplate(editing){
+  const cats = catsFor(state.draftType);
+  const amount = editing ? editing.amount : '';
+  const date = editing ? editing.date : todayStr();
+  const note = editing ? (editing.note || '') : '';
+  return `
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h3>${editing ? 'ແກ້ໄຂລາຍການ' : 'ເພີ່ມລາຍການໃໝ່'}</h3>
+      <button class="x" id="sheetClose" aria-label="ປິດ">✕</button>
+    </div>
+    <div class="seg">
+      <button class="${state.draftType==='expense'?'active exp':''}" data-type="expense">ລາຍຈ່າຍ</button>
+      <button class="${state.draftType==='income'?'active inc':''}" data-type="income">ລາຍຮັບ</button>
+    </div>
+    <div class="field">
+      <label>ຈຳນວນເງິນ (ກີບ)</label>
+      <div class="amount-input"><span>₭</span><input type="number" inputmode="numeric" min="0" step="1000" id="amountInput" value="${amount}" placeholder="0"></div>
+    </div>
+    <div class="field">
+      <label>ໝວດໝູ່</label>
+      <div class="cat-grid" id="catGrid">
+        ${cats.map(c => `<button class="cat-chip ${state.draftCat===c.id?'sel':''} ${state.draftType==='income'?'inc':''}" data-catid="${c.id}" style="${state.draftCat===c.id?('color:'+(state.draftType==='income'?'var(--jade)':'var(--terracotta)')):''}">
+            <span class="m" style="background:${state.draftType==='income'?'var(--jade-tint)':'var(--terracotta-tint)'};color:${state.draftType==='income'?'var(--jade)':'var(--terracotta)'}">${c.short}</span>${c.label}
+          </button>`).join('')}
+      </div>
+    </div>
+    <div class="field">
+      <label>ວັນທີ</label>
+      <input type="date" class="plain" id="dateInput" value="${date}">
+    </div>
+    <div class="field">
+      <label>ໝາຍເຫດ (ຖ້າມີ)</label>
+      <input type="text" class="plain" id="noteInput" maxlength="60" placeholder="ເຊັ່ນ: ກາເຟ, ຄ່ານ້ຳມັນ..." value="${escapeHtml(note)}">
+    </div>
+    <div class="sheet-actions">
+      ${editing ? `<button class="btn btn-danger" id="deleteBtn">ລົບ</button>` : ''}
+      <button class="btn btn-primary btn-block" id="saveBtn">ບັນທຶກ</button>
+    </div>
+  `;
+}
+function attachSheetHandlers(editing){
+  document.getElementById('sheetClose').onclick = closeSheet;
+  document.querySelectorAll('.seg button').forEach(b => {
+    b.onclick = () => {
+      state.draftType = b.dataset.type;
+      state.draftCat = null;
+      document.getElementById('sheet').innerHTML = sheetTemplate(editing);
+      attachSheetHandlers(editing);
+    };
+  });
+  document.querySelectorAll('.cat-chip').forEach(b => {
+    b.onclick = () => {
+      state.draftCat = b.dataset.catid;
+      document.querySelectorAll('.cat-chip').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel');
+    };
+  });
+  const delBtn = document.getElementById('deleteBtn');
+  if (delBtn) delBtn.onclick = async () => {
+    if (!confirm('ລົບລາຍການນີ້?')) return;
+    state.transactions = state.transactions.filter(t => t.id !== state.editingId);
+    await saveTransactions();
+    closeSheet();
+    render();
+    showToast('ລົບລາຍການແລ້ວ');
+  };
+  document.getElementById('saveBtn').onclick = async () => {
+    const amount = Number(document.getElementById('amountInput').value);
+    const date = document.getElementById('dateInput').value;
+    const note = document.getElementById('noteInput').value.trim();
+    if (!amount || amount <= 0){ showToast('ກະລຸນາປ້ອນຈຳນວນເງິນ'); return; }
+    if (!state.draftCat){ showToast('ກະລຸນາເລືອກໝວດໝູ່'); return; }
+    if (!date){ showToast('ກະລຸນາເລືອກວັນທີ'); return; }
+
+    if (state.editingId){
+      const t = state.transactions.find(x => x.id === state.editingId);
+      t.type = state.draftType; t.amount = amount; t.categoryId = state.draftCat; t.date = date; t.note = note;
+    } else {
+      state.transactions.push({
+        id: uid(), type: state.draftType, amount, categoryId: state.draftCat,
+        date, note, createdAt: Date.now().toString(36)
+      });
+    }
+    await saveTransactions();
+    closeSheet();
+    render();
+    showToast('ບັນທຶກແລ້ວ');
+  };
+}
+
+/* ============ Export helpers ============ */
+async function exportToExcel(){
+  if (!window.XLSX) {
+    showToast('ກຳລັງໂຫຼດ library...');
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js');
+  }
+  
+  const XLSX = window.XLSX;
+  const wb = XLSX.utils.book_new();
+  
+  // Sheet 1: Monthly summary
+  const monthlyData = {};
+  state.transactions.forEach(t => {
+    const [y,m] = t.date.split('-').map(Number);
+    const key = monthKey(y, m-1);
+    if (!monthlyData[key]) monthlyData[key] = {income: 0, expense: 0};
+    if (t.type === 'income') monthlyData[key].income += Number(t.amount);
+    else monthlyData[key].expense += Number(t.amount);
+  });
+  
+  const monthSummary = [['ເດືອນ/ປີ', 'ລາຍຮັບ (₭)', 'ລາຍຈ່າຍ (₭)', 'ຍອດເຫຼືອ (₭)']];
+  Object.keys(monthlyData).sort().forEach(key => {
+    const d = monthlyData[key];
+    monthSummary.push([key, d.income, d.expense, d.income - d.expense]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(monthSummary), 'ສະຫຼຸບປະຈຳເດືອນ');
+  
+  // Sheet 2: All transactions
+  const txnData = [['ວັນທີ', 'ປະເພດ', 'ໝວດໝູ່', 'ຈຳນວນ (₭)', 'ໝາຍເຫດ']];
+  state.transactions.sort((a,b) => (b.date+b.createdAt).localeCompare(a.date+a.createdAt)).forEach(t => {
+    const cat = findCat(t.type, t.categoryId);
+    txnData.push([t.date, t.type === 'income' ? 'ລາຍຮັບ' : 'ລາຍຈ່າຍ', cat.label, t.amount, t.note || '']);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(txnData), 'ລາຍການທັງໝົດ');
+  
+  XLSX.writeFile(wb, 'ບັນຊີລາຍຮັບ-ລາຍຈ່າຍ_' + new Date().toISOString().split('T')[0] + '.xlsx');
+  showToast('ສົ່ງອອກ Excel ສຳເລັດ');
+}
+
+async function exportToPdf(){
+  if (!window.jsPDF) {
+    showToast('ກຳລັງໂຫຼດ library...');
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js');
+  }
+  
+  const html2pdf = window.html2pdf;
+  
+  let content = '<div style="font-family: Arial, sans-serif; padding: 20px;">';
+  content += '<h1>ບັນຊີລາຍຮັບ-ລາຍຈ່າຍ</h1>';
+  content += '<p>ວັນທີສ້າງ: ' + new Date().toLocaleDateString('lo-LA') + '</p>';
+  
+  // Summary by month
+  const monthlyData = {};
+  state.transactions.forEach(t => {
+    const [y,m] = t.date.split('-').map(Number);
+    const key = monthKey(y, m-1);
+    if (!monthlyData[key]) monthlyData[key] = {income: 0, expense: 0};
+    if (t.type === 'income') monthlyData[key].income += Number(t.amount);
+    else monthlyData[key].expense += Number(t.amount);
+  });
+  
+  content += '<h2>ສະຫຼຸບປະຈຳເດືອນ</h2>';
+  content += '<table style="width:100%;border-collapse:collapse;margin-bottom:20px;">';
+  content += '<tr style="background:#f0f0f0;"><th style="border:1px solid #ddd;padding:8px;">ເດືອນ/ປີ</th><th style="border:1px solid #ddd;padding:8px;">ລາຍຮັບ</th><th style="border:1px solid #ddd;padding:8px;">ລາຍຈ່າຍ</th><th style="border:1px solid #ddd;padding:8px;">ຍອດເຫຼືອ</th></tr>';
+  Object.keys(monthlyData).sort().forEach(key => {
+    const d = monthlyData[key];
+    const bal = d.income - d.expense;
+    content += `<tr><td style="border:1px solid #ddd;padding:8px;">${key}</td><td style="border:1px solid #ddd;padding:8px;text-align:right;">₭ ${fmt(d.income)}</td><td style="border:1px solid #ddd;padding:8px;text-align:right;">₭ ${fmt(d.expense)}</td><td style="border:1px solid #ddd;padding:8px;text-align:right;color:${bal>=0?'green':'red'};">₭ ${fmt(bal)}</td></tr>`;
+  });
+  content += '</table>';
+  
+  // Recent transactions
+  content += '<h2>ລາຍການຫຼ້າສຸດ (100 ລາຍການ)</h2>';
+  content += '<table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:12px;">';
+  content += '<tr style="background:#f0f0f0;"><th style="border:1px solid #ddd;padding:6px;">ວັນທີ</th><th style="border:1px solid #ddd;padding:6px;">ປະເພດ</th><th style="border:1px solid #ddd;padding:6px;">ໝວດໝູ່</th><th style="border:1px solid #ddd;padding:6px;text-align:right;">ຈຳນວນ</th><th style="border:1px solid #ddd;padding:6px;">ໝາຍເຫດ</th></tr>';
+  state.transactions.sort((a,b) => (b.date+b.createdAt).localeCompare(a.date+a.createdAt)).slice(0,100).forEach(t => {
+    const cat = findCat(t.type, t.categoryId);
+    content += `<tr><td style="border:1px solid #ddd;padding:6px;">${t.date}</td><td style="border:1px solid #ddd;padding:6px;">${t.type === 'income' ? 'ລາຍຮັບ' : 'ລາຍຈ່າຍ'}</td><td style="border:1px solid #ddd;padding:6px;">${cat.label}</td><td style="border:1px solid #ddd;padding:6px;text-align:right;">₭ ${fmt(t.amount)}</td><td style="border:1px solid #ddd;padding:6px;">${t.note || ''}</td></tr>`;
+  });
+  content += '</table>';
+  
+  content += '</div>';
+  
+  const opt = {margin: 10, filename: 'ບັນຊີລາຍຮັບ-ລາຍຈ່າຍ_' + new Date().toISOString().split('T')[0] + '.pdf', image: {type: 'jpeg', quality: 0.98}, html2canvas: {scale: 2}, jsPDF: {orientation: 'p', unit: 'mm', format: 'a4'}};
+  html2pdf().set(opt).from(content).save();
+  showToast('ສົ່ງອອກ PDF ສຳເລັດ');
+}
+
+function loadScript(src){
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+function attachDynamicHandlers(){
+  document.querySelectorAll('[data-edit]').forEach(b => {
+    b.onclick = () => openSheet(b.dataset.edit);
+  });
+  const seeAll = document.getElementById('seeAllLink');
+  if (seeAll) seeAll.onclick = () => { state.tab = 'transactions'; render(); };
+
+  document.querySelectorAll('[data-filter]').forEach(b => {
+    b.onclick = () => { state.txnFilter = b.dataset.filter; render(); };
+  });
+
+  const resetBtn = document.getElementById('resetBtn');
+  if (resetBtn) resetBtn.onclick = async () => {
+    if (!confirm('ຢືນຢັນລົບຂໍ້ມູນທັງໝົດ? ການນີ້ບໍ່ສາມາດກູ້ຄືນໄດ້')) return;
+    state.transactions = [];
+    lsRemove(STORAGE_KEY_TXNS);
+    render();
+    showToast('ລົບຂໍ້ມູນທັງໝົດແລ້ວ');
+  };
+
+  const exportExcelBtn = document.getElementById('exportExcelBtn');
+  if (exportExcelBtn) exportExcelBtn.onclick = async () => {
+    exportExcelBtn.disabled = true;
+    exportExcelBtn.textContent = 'ກຳລັງສົ່ງອອກ...';
+    try {
+      await exportToExcel();
+    } catch (e) {
+      showToast('ບໍ່ສາມາດສົ່ງອອກ Excel ໄດ້: ' + e.message);
+    } finally {
+      exportExcelBtn.disabled = false;
+      exportExcelBtn.textContent = '📊 ສົ່ງອອກເປັນ Excel';
+    }
+  };
+
+  const exportPdfBtn = document.getElementById('exportPdfBtn');
+  if (exportPdfBtn) exportPdfBtn.onclick = async () => {
+    exportPdfBtn.disabled = true;
+    exportPdfBtn.textContent = 'ກຳລັງສົ່ງອອກ...';
+    try {
+      await exportToPdf();
+    } catch (e) {
+      showToast('ບໍ່ສາມາດສົ່ງອອກ PDF ໄດ້: ' + e.message);
+    } finally {
+      exportPdfBtn.disabled = false;
+      exportPdfBtn.textContent = '📄 ສົ່ງອອກເປັນ PDF';
+    }
+  };
+}
+
+/* ============ Nav / month switch / FAB ============ */
+document.querySelectorAll('.navitem').forEach(b => {
+  b.addEventListener('click', () => { state.tab = b.dataset.tab; render(); });
+});
+document.getElementById('prevMonth').addEventListener('click', () => {
+  let {y,m} = state.viewMonth; m--; if (m<0){m=11;y--;}
+  state.viewMonth = {y,m}; render();
+});
+document.getElementById('nextMonth').addEventListener('click', () => {
+  let {y,m} = state.viewMonth; m++; if (m>11){m=0;y++;}
+  state.viewMonth = {y,m}; render();
+});
+document.getElementById('fabAdd').addEventListener('click', () => openSheet(null));
+document.getElementById('overlay').addEventListener('click', (e) => {
+  if (e.target.id === 'overlay') closeSheet();
+});
+
+/* ============ Init ============ */
+(async function init(){
+  await loadAll();
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  render();
+})();
+
+/* ============ PWA: service worker registration ============ */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(() => {
+      /* offline support simply won't be available; app still works online */
+    });
+  });
+}
+</script>
+</body>
+</html>
